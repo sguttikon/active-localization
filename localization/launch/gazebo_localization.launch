@@ -1,0 +1,38 @@
+<launch>
+  <arg name="turtlebot_model" default="$(env TURTLEBOT3_MODEL)"/>
+  <arg name="gazebo_world" default="$(find indoor_layouts)/worlds/sample.sdf"/>
+  <arg name="map_file" default="$(find indoor_layouts)/map/sample/sample_layout.yaml"/>
+  <arg name="rviz_file" default="$(find indoor_layouts)/rviz/localization.rviz"/>
+
+  <!-- launch the gazebo world -->
+  <include file="$(find indoor_layouts)/launch/gazebo_world.launch">
+    <arg name="world_file" value="$(arg gazebo_world)"/>
+  </include>
+
+  <!-- spawn robot into gazebo -->
+  <include file="$(find localization)/launch/turtlebot_spawn.launch" >
+    <arg name="turtle_model" value="$(arg turtlebot_model)"/>
+    <arg name="x_pos" default="0.0"/>
+    <arg name="y_pos" default="-1.0"/>
+    <arg name="z_pos" default="0.0"/>
+  </include>
+
+  <!-- map server -->
+  <node pkg="map_server" name="map_server" type="map_server" args="$(arg map_file)"/>
+  
+  <!-- publish robot state -->
+  <include file="$(find turtlebot3_bringup)/launch/turtlebot3_remote.launch">
+    <arg name="model" value="$(arg turtlebot_model)"/>
+  </include>
+
+  <!-- amcl -->
+  <include file="$(find turtlebot3_navigation)/launch/amcl.launch">
+    <arg name="initial_pose_x" default="0.0"/>
+    <arg name="initial_pose_y" default="0.0"/>
+    <arg name="initial_pose_a" default="0.0"/>
+  </include>
+
+  <!-- rviz -->
+  <node pkg="rviz" type="rviz" name="rviz" args="-d $(arg rviz_file)"/>
+
+</launch>
