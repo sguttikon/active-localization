@@ -15,6 +15,9 @@
     <arg name="x_pos" default="0.0"/>
     <arg name="y_pos" default="-1.0"/>
     <arg name="z_pos" default="0.0"/>
+    <arg name="r_ang" default="0.0"/>
+    <arg name="p_ang" default="0.0"/>
+    <arg name="y_ang" default="0.0"/>
   </include>
 
   <!-- map server -->
