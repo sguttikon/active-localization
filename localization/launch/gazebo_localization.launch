@@ -3,10 +3,12 @@
   <arg name="gazebo_world" default="$(find indoor_layouts)/worlds/sample.sdf"/>
   <arg name="map_file" default="$(find indoor_layouts)/map/sample/sample_layout.yaml"/>
   <arg name="rviz_file" default="$(find indoor_layouts)/rviz/localization.rviz"/>
+  <arg name="gui" default="false"/>
 
   <!-- launch the gazebo world -->
   <include file="$(find indoor_layouts)/launch/gazebo_world.launch">
     <arg name="world_file" value="$(arg gazebo_world)"/>
+    <arg name="gui" value="$(arg gui)" />
   </include>
 
   <!-- spawn robot into gazebo -->
@@ -32,6 +34,8 @@
   </include>
 
   <!-- rviz -->
-  <node pkg="rviz" type="rviz" name="rviz" args="-d $(arg rviz_file)"/>
+  <group if="$(arg gui)">
+    <node pkg="rviz" type="rviz" name="rviz" args="-d $(arg rviz_file)"/>
+  </group>
 
 </launch>
