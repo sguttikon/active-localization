@@ -14,16 +14,17 @@ import gym
 import rospy
 
 from stable_baselines3 import DQN
+from stable_baselines3 import PPO
 
 def train_network():
-    model = DQN('MlpPolicy', env, verbose=1)
-    model.learn(total_timesteps=1000)
+    model = PPO('MlpPolicy', env, verbose=1)
+    model.learn(total_timesteps=25000)
 
-    model.save("dqn_turtlebot3_localize")
+    model.save("ppo_turtlebot3_localize")
     print('training finished')
 
 def eval_network():
-    model = DQN.load("dqn_turtlebot3_localize")
+    model = PPO.load("ppo_turtlebot3_localize")
 
     obs = env.reset()
     for i in range(1000):

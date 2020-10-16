@@ -5,10 +5,10 @@
   <arg name="rviz_file" default="$(find indoor_layouts)/rviz/localization.rviz"/>
 
   <arg name="debug" default="false"/>
-  <arg name="gui" default="false"/>
-  <arg name="recording" default="true"/>
-  <arg name="verbose" default="true"/>
-  <arg name="open_rviz" default="false"/>
+  <arg name="gui" default="true"/>
+  <arg name="recording" default="false"/>
+  <arg name="verbose" default="false"/>
+  <arg name="open_rviz" default="true"/>
 
   <!-- launch the gazebo world -->
   <include file="$(find indoor_layouts)/launch/gazebo_world.launch">
