@@ -13,29 +13,49 @@ from openai_ros.task_envs.turtlebot3 import turtlebot3_localize
 import gym
 import rospy
 import argparse
+import datetime
 
-from stable_baselines3 import DQN
-from stable_baselines3 import PPO
+import stable_baselines3
+from stable_baselines3.common.callbacks import CallbackList, CheckpointCallback
+from stable_baselines3.common.env_checker import check_env
 
-def train_network(file_path: str):
+def train_network(env, file_path: str, agent: str = 'PPO'):
     """
     Train the RL agent for localization task and store the policy/agent
 
-    :params str file_path: location to store the trained agent
+    :params env: openai gym (TurtleBot3LocalizeEnv) instance
+            str file_path: location to store the trained agent
+            agent: stable_baselines3 agent to be used for training
     """
-    model = PPO('MlpPolicy', env, verbose=1)
-    model.learn(total_timesteps=25000)
+    dt_str = datetime.datetime.now().strftime('%d_%m_%Y_%H_%M')
+
+    if agent == 'PPO':
+        model = stable_baselines3.PPO('MlpPolicy', env, verbose=1, tensorboard_log="./ppo_localize_tensorboard/")
+    else:
+        return
+
+    checkpoint_callback = CheckpointCallback(save_freq=1000, save_path="../logs/checkpoints/", name_prefix=dt_str + 'rl_model')
+
+    # create the callback listeners list
+    callback_list = CallbackList([checkpoint_callback])
+
+    model.learn(total_timesteps=30000, callback=callback_list, tb_log_name=dt_str + '_run')
 
     model.save(file_path)
     print('training finished')
 
-def eval_network(file_path: str):
+def eval_network(env, file_path: str):
     """
     Evaluate the pretrained RL agent for localization task
 
-    :params str file_path: location to load the pretrained agent
+    :params env: openai gym (TurtleBot3LocalizeEnv) instance
+            str file_path: location to load the pretrained agent
+            agent: stable_baselines3 agent to be used for evaluation
     """
-    model = PPO.load(file_path)
+    if agent == 'PPO':
+        model = stable_baselines3.PPO.load(file_path)
+    else:
+        return
 
     obs = env.reset()
     for i in range(1000):
@@ -52,7 +72,10 @@ if __name__ == '__main__':
 
     parser = argparse.ArgumentParser(description='Train/Evaluate localization RL agent')
     parser.add_argument('--file_path', dest='file_path', \
-                    required=True, help='full path for location to store/load agent')
+                    required=False, help='full path for location to store/load agent', \
+                    default='./ppo_turtlebot3_localize')
+    parser.add_argument('--train', dest='is_train', required=False, \
+                    default=True, help='whether to train the agent')
     args = parser.parse_args()
 
     # create a new ros node
@@ -61,8 +84,12 @@ if __name__ == '__main__':
     # create a new gym turtlebot3 localization environment
     env = gym.make('TurtleBot3Localize-v0')
 
-    #train_network(args.file_path)
-    eval_network(args.file_path)
+    # check out environment follows the gym interface
+    #check_env(env)
+
+    if args.is_train:
+        train_network(env, args.file_path)
+    eval_network(env, args.file_path)
 
     # prevent te code from exiting until an shutdown signal (ctrl+c) is received
     rospy.spin()
