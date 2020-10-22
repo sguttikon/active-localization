@@ -16,7 +16,7 @@ import argparse
 import datetime
 
 import stable_baselines3
-from stable_baselines3.common.callbacks import CallbackList, CheckpointCallback
+from stable_baselines3.common.callbacks import CallbackList, CheckpointCallback, EvalCallback
 from stable_baselines3.common.env_checker import check_env
 
 def train_network(env, file_path: str, agent: str = 'PPO'):
@@ -30,21 +30,22 @@ def train_network(env, file_path: str, agent: str = 'PPO'):
     dt_str = datetime.datetime.now().strftime('%d_%m_%Y_%H_%M')
 
     if agent == 'PPO':
-        model = stable_baselines3.PPO('MlpPolicy', env, verbose=1, tensorboard_log="./ppo_localize_tensorboard/")
+        model = stable_baselines3.PPO('MlpPolicy', env, verbose=1, tensorboard_log="./ppo_tensorboard/")
     else:
         return
 
-    checkpoint_callback = CheckpointCallback(save_freq=1000, save_path="../logs/checkpoints/", name_prefix=dt_str + 'rl_model')
+    checkpoint_callback = CheckpointCallback(save_freq=1000, save_path="./logs/checkpoints/", name_prefix=dt_str + 'rl_model')
+    eval_callback = EvalCallback(env, best_model_save_path='./logs/', log_path='./logs/', eval_freq=500, deterministic=True, render=False)
 
     # create the callback listeners list
-    callback_list = CallbackList([checkpoint_callback])
+    callback_list = CallbackList([eval_callback])
 
     model.learn(total_timesteps=30000, callback=callback_list, tb_log_name=dt_str + '_run')
 
     model.save(file_path)
     print('training finished')
 
-def eval_network(env, file_path: str):
+def eval_network(env, file_path: str, agent: str = 'PPO'):
     """
     Evaluate the pretrained RL agent for localization task
 
