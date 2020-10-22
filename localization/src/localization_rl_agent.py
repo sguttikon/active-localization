@@ -16,11 +16,12 @@ import argparse
 import datetime
 
 import stable_baselines3
+import custom_baselines
 from stable_baselines3.common.callbacks import CallbackList, CheckpointCallback, EvalCallback
 from stable_baselines3.common.env_checker import check_env
 from stable_baselines3.common.monitor import Monitor
 
-def train_network(env, file_path: str, agent: str = 'PPO'):
+def train_network(env, file_path: str, agent: str):
     """
     Train the RL agent for localization task and store the policy/agent
 
@@ -33,11 +34,13 @@ def train_network(env, file_path: str, agent: str = 'PPO'):
     env = Monitor(env, filename=None)
 
     if agent == 'PPO':
-        model = stable_baselines3.PPO('MlpPolicy', env, verbose=1, tensorboard_log="./ppo_tensorboard/")
+        model = stable_baselines3.PPO('MlpPolicy', env, verbose=1, tensorboard_log='./ppo_tensorboard/')
+    elif agent == 'RAND':
+        model = custom_baselines.RAND(env, verbose=1, tensorboard_log='./rand_tensorboard')
     else:
         return
 
-    checkpoint_callback = CheckpointCallback(save_freq=1000, save_path=log_dir + "checkpoints/", name_prefix=dt_str + 'rl_model')
+    checkpoint_callback = CheckpointCallback(save_freq=1000, save_path=log_dir + 'checkpoints/', name_prefix=dt_str + 'rl_model')
     eval_callback = EvalCallback(env, best_model_save_path=log_dir, log_path=log_dir, eval_freq=500, deterministic=True, render=False)
 
     # create the callback listeners list
@@ -48,7 +51,7 @@ def train_network(env, file_path: str, agent: str = 'PPO'):
     model.save(file_path)
     print('training finished')
 
-def eval_network(env, file_path: str, agent: str = 'PPO'):
+def eval_network(env, file_path: str, agent: str):
     """
     Evaluate the pretrained RL agent for localization task
 
@@ -58,6 +61,8 @@ def eval_network(env, file_path: str, agent: str = 'PPO'):
     """
     if agent == 'PPO':
         model = stable_baselines3.PPO.load(file_path)
+    elif agent == 'RAND':
+        model = custom_baselines.RAND.load(file_path)
     else:
         return
 
@@ -80,6 +85,8 @@ if __name__ == '__main__':
                     default='./ppo_turtlebot3_localize')
     parser.add_argument('--train', dest='is_train', required=False, \
                     default=True, help='whether to train the agent')
+    parser.add_argument('--agent', dest='agent', required=False, \
+                    default='RAND', help='agent to use for train/eval')
     args = parser.parse_args()
 
     # create a new ros node
@@ -92,8 +99,8 @@ if __name__ == '__main__':
     check_env(env)
 
     if args.is_train:
-        train_network(env, args.file_path)
-    eval_network(env, args.file_path)
+        train_network(env, args.file_path, args.agent)
+    eval_network(env, args.file_path, args.agent)
 
     # prevent te code from exiting until an shutdown signal (ctrl+c) is received
     rospy.spin()
