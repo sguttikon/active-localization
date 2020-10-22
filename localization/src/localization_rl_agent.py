@@ -18,6 +18,7 @@ import datetime
 import stable_baselines3
 from stable_baselines3.common.callbacks import CallbackList, CheckpointCallback, EvalCallback
 from stable_baselines3.common.env_checker import check_env
+from stable_baselines3.common.monitor import Monitor
 
 def train_network(env, file_path: str, agent: str = 'PPO'):
     """
@@ -28,14 +29,16 @@ def train_network(env, file_path: str, agent: str = 'PPO'):
             agent: stable_baselines3 agent to be used for training
     """
     dt_str = datetime.datetime.now().strftime('%d_%m_%Y_%H_%M')
+    log_dir = './logs/'
+    env = Monitor(env, filename=None)
 
     if agent == 'PPO':
         model = stable_baselines3.PPO('MlpPolicy', env, verbose=1, tensorboard_log="./ppo_tensorboard/")
     else:
         return
 
-    checkpoint_callback = CheckpointCallback(save_freq=1000, save_path="./logs/checkpoints/", name_prefix=dt_str + 'rl_model')
-    eval_callback = EvalCallback(env, best_model_save_path='./logs/', log_path='./logs/', eval_freq=500, deterministic=True, render=False)
+    checkpoint_callback = CheckpointCallback(save_freq=1000, save_path=log_dir + "checkpoints/", name_prefix=dt_str + 'rl_model')
+    eval_callback = EvalCallback(env, best_model_save_path=log_dir, log_path=log_dir, eval_freq=500, deterministic=True, render=False)
 
     # create the callback listeners list
     callback_list = CallbackList([eval_callback])
@@ -86,7 +89,7 @@ if __name__ == '__main__':
     env = gym.make('TurtleBot3Localize-v0')
 
     # check out environment follows the gym interface
-    #check_env(env)
+    check_env(env)
 
     if args.is_train:
         train_network(env, args.file_path)
