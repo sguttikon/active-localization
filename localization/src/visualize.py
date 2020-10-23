@@ -15,6 +15,7 @@ def plot_reward(
 
     fig, ax = plt.subplots()
     ax.plot(time_steps, avg_rewards, marker='o')
+    ax.plot(time_steps, np.full(avg_rewards.shape, 25),'g--')
 
     ax.set(xlabel='timesteps', ylabel='avg reward of #episodes', title='Average Reward')
     ax.grid()
@@ -27,7 +28,7 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Visualize results')
     parser.add_argument('--log_dir', dest='log_dir', \
                         required=False, help='full path for location to .npz file', \
-                        default='./logs/evaluations.npz')
+                        default='./logs/RAND/results/evaluations.npz')
     args = parser.parse_args()
     npz_data = np.load(args.log_dir)
     time_steps = npz_data['timesteps']

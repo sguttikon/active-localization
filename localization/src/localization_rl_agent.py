@@ -35,20 +35,30 @@ def train_network(env, file_path: str, agent: str):
 
     if agent == 'PPO':
         log_dir = './logs/PPO/'
-        model = stable_baselines3.PPO('MlpPolicy', env, verbose=1, tensorboard_log='tensorboard/')
+        model = stable_baselines3.PPO('MlpPolicy', env, verbose=1,
+                                    tensorboard_log=log_dir + 'tensorboard/')
     elif agent == 'RAND':
         log_dir = './logs/RAND/'
-        model = custom_baselines.RAND(env, verbose=1, tensorboard_log=log_dir + 'tensorboard/')
+        model = custom_baselines.RAND(env, verbose=1,
+                                    tensorboard_log=log_dir + 'tensorboard/')
     else:
         return
 
-    checkpoint_callback = CheckpointCallback(save_freq=1000, save_path=log_dir + 'checkpoints/', name_prefix=dt_str + 'rl_model')
-    eval_callback = EvalCallback(env, best_model_save_path=log_dir, log_path=log_dir, eval_freq=500, deterministic=True, render=False)
+    checkpoint_callback = CheckpointCallback(save_freq=1000,
+                                             save_path=log_dir + 'checkpoints/',
+                                             name_prefix=dt_str + 'rl_model')
+    eval_callback = EvalCallback(env,
+                                 best_model_save_path=log_dir + 'best_model',
+                                 log_path=log_dir + 'results',
+                                 eval_freq=500,
+                                 deterministic=True,
+                                 render=False)
 
     # create the callback listeners list
-    callback_list = CallbackList([eval_callback])
+    callback_list = CallbackList([checkpoint_callback, eval_callback])
 
-    model.learn(total_timesteps=train_steps, callback=callback_list, tb_log_name=dt_str + '_run')
+    model.learn(total_timesteps=train_steps, callback=callback_list,
+                tb_log_name=dt_str + '_run')
 
     model.save(file_path)
     print('training finished')
