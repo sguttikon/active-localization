@@ -30,13 +30,15 @@ def train_network(env, file_path: str, agent: str):
             agent: stable_baselines3 agent to be used for training
     """
     dt_str = datetime.datetime.now().strftime('%d_%m_%Y_%H_%M')
-    log_dir = './logs/'
     env = Monitor(env, filename=None)
+    train_steps = 30000
 
     if agent == 'PPO':
-        model = stable_baselines3.PPO('MlpPolicy', env, verbose=1, tensorboard_log='./ppo_tensorboard/')
+        log_dir = './logs/PPO/'
+        model = stable_baselines3.PPO('MlpPolicy', env, verbose=1, tensorboard_log='tensorboard/')
     elif agent == 'RAND':
-        model = custom_baselines.RAND(env, verbose=1, tensorboard_log='./rand_tensorboard')
+        log_dir = './logs/RAND/'
+        model = custom_baselines.RAND(env, verbose=1, tensorboard_log=log_dir + 'tensorboard/')
     else:
         return
 
@@ -46,7 +48,7 @@ def train_network(env, file_path: str, agent: str):
     # create the callback listeners list
     callback_list = CallbackList([eval_callback])
 
-    model.learn(total_timesteps=30000, callback=callback_list, tb_log_name=dt_str + '_run')
+    model.learn(total_timesteps=train_steps, callback=callback_list, tb_log_name=dt_str + '_run')
 
     model.save(file_path)
     print('training finished')
@@ -59,6 +61,8 @@ def eval_network(env, file_path: str, agent: str):
             str file_path: location to load the pretrained agent
             agent: stable_baselines3 agent to be used for evaluation
     """
+    eval_steps = 500
+
     if agent == 'PPO':
         model = stable_baselines3.PPO.load(file_path)
     elif agent == 'RAND':
@@ -67,22 +71,22 @@ def eval_network(env, file_path: str, agent: str):
         return
 
     obs = env.reset()
-    for i in range(1000):
+    for i in range(eval_steps):
         action, _states = model.predict(obs, deterministic=True)
         obs, reward, done, info = env.step(action)
         env.render()
         if done:
           obs = env.reset()
-          break
 
     env.close()
+    print('evaluation finished')
 
 if __name__ == '__main__':
 
     parser = argparse.ArgumentParser(description='Train/Evaluate localization RL agent')
     parser.add_argument('--file_path', dest='file_path', \
                     required=False, help='full path for location to store/load agent', \
-                    default='./ppo_turtlebot3_localize')
+                    default='./rand_turtlebot3_localize')
     parser.add_argument('--train', dest='is_train', required=False, \
                     default=True, help='whether to train the agent')
     parser.add_argument('--agent', dest='agent', required=False, \

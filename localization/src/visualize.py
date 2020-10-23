@@ -2,6 +2,7 @@
 
 import numpy as np
 import matplotlib.pyplot as plt
+import argparse
 
 def plot_reward(
     time_steps: np.ndarray,
@@ -13,7 +14,7 @@ def plot_reward(
     """
 
     fig, ax = plt.subplots()
-    ax.plot(time_steps, avg_rewards)
+    ax.plot(time_steps, avg_rewards, marker='o')
 
     ax.set(xlabel='timesteps', ylabel='avg reward of #episodes', title='Average Reward')
     ax.grid()
@@ -23,8 +24,12 @@ def plot_reward(
     plt.show()
 
 if __name__ == '__main__':
-    log_dir = './logs/evaluations.npz'
-    npz_data = np.load(log_dir)
+    parser = argparse.ArgumentParser(description='Visualize results')
+    parser.add_argument('--log_dir', dest='log_dir', \
+                        required=False, help='full path for location to .npz file', \
+                        default='./logs/evaluations.npz')
+    args = parser.parse_args()
+    npz_data = np.load(args.log_dir)
     time_steps = npz_data['timesteps']
     avg_rewards = np.mean(npz_data['results'], axis=1)
     avg_ep_lengths = np.mean(npz_data['ep_lengths'], axis=1)
